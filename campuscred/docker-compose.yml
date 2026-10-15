@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  # Web Application Service (PHP 8.2 + Apache)
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: campuscred_app
+    restart: always
+    ports:
+      - "8080:80"
+    environment:
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_NAME=campuscred
+      - DB_USER=campuscred_user
+      - DB_PASS=campuscred_pass
+    volumes:
+      - ./uploads:/var/www/html/uploads
+    depends_on:
+      - db
+    networks:
+      - campuscred_net
+
+  # Database Service (MySQL 8.0)
+  db:
+    image: mysql:8.0
+    container_name: campuscred_db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root_secure_password
+      MYSQL_DATABASE: campuscred
+      MYSQL_USER: campuscred_user
+      MYSQL_PASSWORD: campuscred_pass
+    ports:
+      - "3307:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./database.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - campuscred_net
+
+volumes:
+  db_data:
+    driver: local
+
+networks:
+  campuscred_net:
+    driver: bridge
